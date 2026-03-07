@@ -1,4 +1,4 @@
-name: 🚀 JustRunMy Auto Renew
+name: 🔄 JustRunMy Auto Renew 未完成版
 
 # 触发条件
 on:
@@ -20,46 +20,76 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      # ========== Secrets 配置 ==========
+      # ========== 需要用户配置的变量 ==========
+      # ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+      # ✅              Secrets 配置开始                         
+      # ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+      
       JUST_BATCH: ${{ secrets.JUST_BATCH }}                    # 账户信息（必须）格式: email,passwd,tg_token,tg_chat_id
       HY2_PROXY_URL: ${{ secrets.HY2_PROXY_URL }}              # Hysteria2 代理 URL（可选）
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}    # 私有仓库访问令牌（必须）
       SOCKS_PORT: ${{ secrets.SOCKS_PORT || '51080' }}         # SOCKS 端口（默认 51080）
       
+      # ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+      # ✅              Secrets 配置结束                          
+      # ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+      
       # ========== 项目配置 ==========
-      SCRIPT_DESC: JustRunMy 自动续期脚本
-      SCREENSHOT_DIR: screenshots
-      PRIVATE_REPO: jyucoeng/auto-justrunmy-private
-      SCRIPT_NAME: renew.py
+      # ✅ 可以修改：这些配置可根据需要调整
+      SCRIPT_DESC: JustRunMy 自动续期脚本                # 脚本描述
+      SCREENSHOT_DIR: screenshots                     # 截图目录名
+      
+      # ❗ 不建议修改：除非你知道自己在做什么
+      PRIVATE_REPO: jyucoeng/auto-justrunmy-private   # 私有仓库地址
+      PRIVATE_REPO_BRANCH: main                       # 私有仓库分支
+      SCRIPT_NAME: renew.py                            # 脚本文件名
+      PROJECT_DIR: justrunmy                          # 项目目录名
+      
+      # ========== 动态变量 ==========
+      # ⚠️ 自动获取：由 GitHub 自动填充，不需要修改
+      REPO_OWNER: ${{ github.repository_owner }}      # 仓库所有者
+      REPO_NAME: ${{ github.event.repository.name }}  # 仓库名称
     
     steps:
-      # 步骤 1: 检出私有仓库
-      - name: 📥 检出私有仓库
+      # 步骤 1: 检出公开仓库
+      - name: 📥 检出公开仓库
+        uses: actions/checkout@v4
+      
+      # 步骤 1.5: 创建输出目录
+      - name: 📁 创建输出目录
+        run: |
+          mkdir -p ${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}/${{ env.SCREENSHOT_DIR }}
+
+      # 步骤 2: 检出私有仓库
+      - name: 🔐 检出私有仓库
         uses: actions/checkout@v4
         with:
           repository: ${{ env.PRIVATE_REPO }}
+          ref: ${{ env.PRIVATE_REPO_BRANCH }}
           token: ${{ env.PRIVATE_REPO_TOKEN }}
+          path: ${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}
           fetch-depth: 1
 
-      # 步骤 2: 设置 Python 环境
-      - name: 🐍 设置 Python 3.11
+      # 步骤 3: 设置 Python 环境
+      - name: � 设置 Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: 3.11
 
-      # 步骤 3: 安装系统依赖
-      - name: 📦 安装系统依赖
+      # 步骤 4: 安装系统依赖
+      - name: � 安装系统依赖
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb xdotool scrot fonts-noto-cjk
 
-      # 步骤 4: 安装 Python 依赖
+      # 步骤 5: 安装 Python 依赖
       - name: 📚 安装 Python 依赖
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+        working-directory: ${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}
 
-      # 步骤 5: 安装 Hysteria2（如果需要代理）
+      # 步骤 6: 安装 Hysteria2（如果需要代理）
       - name: 📡 安装 Hysteria2
         run: |
           if [ -n "${{ env.HY2_PROXY_URL }}" ]; then
@@ -74,7 +104,7 @@ jobs:
             echo "⚠️ 未配置代理，跳过 Hysteria2 安装"
           fi
 
-      # 步骤 6: 执行脚本
+      # 步骤 7: 执行脚本
       - name: 🚀 执行 ${{ env.SCRIPT_DESC }}
         env:
           JUST_BATCH: ${{ env.JUST_BATCH }}
@@ -82,44 +112,45 @@ jobs:
           SOCKS_PORT: ${{ env.SOCKS_PORT }}
           SCREENSHOT_DIR: ${{ env.SCREENSHOT_DIR }}
         run: python ${{ env.SCRIPT_NAME }}
+        working-directory: ${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}
 
-      # 步骤 7: 上传截图
+      # 步骤 8: 上传截图
       - name: 📸 上传截图
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots-${{ github.run_id }}
-          path: ${{ env.SCREENSHOT_DIR }}/
+          name: ${{ env.PROJECT_DIR }}-screenshots-${{ github.run_id }}
+          path: ${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}/${{ env.SCREENSHOT_DIR }}/
           retention-days: 7
 
-      # 步骤 8: 清理本地截图
+      # 步骤 9: 清理本地截图
       - name: 🧹 清理本地截图
         if: always()
         run: |
-          if [ -d "${{ env.SCREENSHOT_DIR }}" ]; then
-            rm -rf ${{ env.SCREENSHOT_DIR }}/*
+          if [ -d "${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}/${{ env.SCREENSHOT_DIR }}" ]; then
+            rm -rf ${{ env.REPO_OWNER }}-${{ env.REPO_NAME }}-${{ env.PROJECT_DIR }}/${{ env.SCREENSHOT_DIR }}/*
             echo "✅ 本地截图已清理"
           fi
 
-      # 步骤 9: 提交执行时间到公开库
+      # 步骤 10: 提交执行时间到公开库
       - name: ⏱️ 提交执行时间
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          mkdir -p justrunmy && echo "$(date +'%Y-%m-%d %H:%M:%S')" > justrunmy/time.txt
-          git add justrunmy/time.txt 2>/dev/null || true
+          mkdir -p ${{ env.PROJECT_DIR }} && echo "$(date +'%Y-%m-%d %H:%M:%S')" > ${{ env.PROJECT_DIR }}/time.txt
+          git add ${{ env.PROJECT_DIR }}/time.txt 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "无变化，无需提交"
           else
             TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S')
-            git commit -m "⏱️ 更新执行时间: $TIMESTAMP"
+            git commit -m "⏱️ 更新 ${{ env.PROJECT_DIR }} 执行时间: $TIMESTAMP"
             git fetch origin main
             git push -f origin HEAD:main
             echo "✅ 更改已推送"
           fi
 
-      # 步骤 10: 清理旧的工作流运行记录
+      # 步骤 11: 清理旧的工作流运行记录
       - name: 🧹 清理旧的工作流运行记录
         uses: Mattraks/delete-workflow-runs@v2
         with:
