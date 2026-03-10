@@ -1,5 +1,9 @@
-Runner repo: sevfat/auto_scripts | Run ID: 22886031229 | UTC: 2026-03-10 03:43:46
+Runner repo: sevfat/auto_scripts | Run ID: 22913673134 | UTC: 2026-03-10 16:47:18
 
-# XServer 续期报告
+**最后运行时间**: `2026-03-11 00:47:07`
 
-脚本未生成报告文件
+**运行结果**: <br>
+🖥️服务器:`🇯🇵Xserver(MC)`<br>
+📊续期结果:✅Success<br>
+🕛️旧到期时间: `2026-03-11`<br>
+🕡️新到期时间: `2026-03-14 20:35`<br>
