@@ -1,0 +1,115 @@
+name: 🔄 FreezeHost 自动续期
+on:
+  schedule:
+    - cron: '23 1 */2 * *'
+  workflow_dispatch:
+
+env:
+  # FREEZE_DISCORD_ACCOUNT格式: 每行一个账号，用逗号分隔 email,password,tg_token,tg_id
+  # 支持多账号，TG 字段可选
+  # 示例:
+  # email1@example.com,password1,tg_token1,tg_id1
+  # email2@example.com,password2,tg_token2,tg_id2
+  # email3@example.com,password3
+
+  FREEZE_DISCORD_ACCOUNT: ${{ secrets.FREEZE_DISCORD_ACCOUNT }}
+  HY2_PROXY_URL: ${{ secrets.HY2_PROXY_URL }}
+  SOCKS_PORT: ${{ secrets.SOCKS_PORT || '51080' }}
+
+  
+  PROJECT_DIR: freeze
+  PRIVATE_REPO: jyucoeng/auto_freezehost_private
+  PRIVATE_REPO_BRANCH: main
+
+concurrency:
+  # 并发组名称，防止多个工作流同时运行，名字不要乱改
+  group: freeze-renew
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  renew:
+    name: 🔄 执行续期
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 📥 检出公开库代码
+        uses: actions/checkout@v4
+
+      - name: 📥 检出私有仓库
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.PRIVATE_REPO }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          ref: ${{ env.PRIVATE_REPO_BRANCH }}
+          path: ${{ github.repository_owner }}-${{ github.event.repository.name }}-${{ env.PROJECT_DIR }}
+          fetch-depth: 1
+
+      - name: 🟢 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 📦 安装依赖
+        run: |
+          cd ${{ github.repository_owner }}-${{ github.event.repository.name }}-${{ env.PROJECT_DIR }}
+          npm install
+
+      - name: 🌐 安装 Playwright 浏览器
+        run: npx playwright install chromium --with-deps
+
+      - name: 📡 安装 Hysteria2
+        run: |
+          if [ -n "${{ env.HY2_PROXY_URL }}" ]; then
+            echo "安装 Hysteria2..."
+            curl -L -o hysteria \
+              https://github.com/apernet/hysteria/releases/latest/download/hysteria-linux-amd64
+            chmod +x hysteria
+            sudo mv hysteria /usr/local/bin/hysteria
+            hysteria version
+            echo "✅ Hysteria2 安装完成"
+          else
+            echo "⚠️ 未配置代理，跳过 Hysteria2 安装"
+          fi
+
+      - name: ⏳ 添加随机延迟
+        run: |
+          delay=$((RANDOM % 120))
+          echo "随机延迟: ${delay}秒"
+          sleep $delay
+
+      - name: 🚀 运行续期脚本
+        env:
+          FREEZE_DISCORD_ACCOUNT: ${{ env.FREEZE_DISCORD_ACCOUNT }}
+          HY2_PROXY_URL: ${{ env.HY2_PROXY_URL }}
+          SOCKS_PORT: ${{ env.SOCKS_PORT }}
+        run: |
+          cd ${{ github.repository_owner }}-${{ github.event.repository.name }}-${{ env.PROJECT_DIR }}
+          npx playwright test
+
+      - name: 📸 上传失败截图
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: test-results/
+          retention-days: 7
+
+      - name: ⏱️ 提交执行时间到公开库
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p ${{ env.PROJECT_DIR }} && echo "$(date +'%Y-%m-%d %H:%M:%S')" > ${{ env.PROJECT_DIR }}/time.txt
+          git add ${{ env.PROJECT_DIR }}/time.txt 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "无变化，无需提交"
+          else
+            TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S')
+            git commit -m "⏱️ 更新 ${{ env.PROJECT_DIR }} 执行时间: $TIMESTAMP"
+            git fetch origin main
+            git push -f origin HEAD:main
+            echo "✅ 更改已推送到公开库"
+          fi
