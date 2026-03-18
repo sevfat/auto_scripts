@@ -4,8 +4,8 @@ on:
   schedule:
     - cron: '11 10 * * *'   
 env:
-  PROJECT_DIR: berryhsi
-  BERRY_BATCH_ACCOUNTS: ${{ secrets.BERRY_BATCH_ACCOUNTS_HSI }}
+  PROJECT_DIR: berryguog
+  BERRY_BATCH_ACCOUNTS: ${{ secrets.BERRY_BATCH_ACCOUNTS_GUOG }}
   HY2_PROXY_URL: ${{ secrets.BERRY_BATCH_HY2_PROXY_URL }}
   SOCKS_PORT: ${{ secrets.SOCKS_PORT || '51080' }}
 permissions:
