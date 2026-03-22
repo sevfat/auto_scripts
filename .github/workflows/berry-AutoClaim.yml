@@ -5,6 +5,13 @@ on:
     - cron: '23 0 * * *'   # 每天 UTC 00:23（北京时间 08:23）
 env:
   PROJECT_DIR: berry
+  # BERRY_BATCH_ACCOUNTS 格式说明:
+  # 每行一个账号，格式为: token|accountName,session_id[,tg_token,tg_chat_id]
+  # 其中 token|accountName 中的 accountName 是可选的
+  # 示例:
+  #   token1|account1,session_id_1,tg_token_1,tg_chat_id_1
+  #   token2|account2,session_id_2
+  #   token3,session_id_3,tg_token_3,tg_chat_id_3
   BERRY_BATCH_ACCOUNTS: ${{ secrets.BERRY_BATCH_ACCOUNTS }}
   HY2_PROXY_URL: ${{ secrets.HY2_PROXY_URL }}
   SOCKS_PORT: ${{ secrets.SOCKS_PORT || '51080' }}
