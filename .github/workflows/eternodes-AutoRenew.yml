@@ -32,7 +32,7 @@ jobs:
       #   token2|account2,session_id_2,user_id_2,server_value_2
       #   token3,session_id_3,user_id_3,server_value_3,tg_token_3,tg_chat_id_3
       ETERNODE_BATCH_ACCOUNTS: ${{ secrets.ETERNODE_BATCH_ACCOUNTS }}
-      HY2_PROXY_URL: ${{ secrets.ETERNODE_HY2_PROXY_URL }}
+      HY2_PROXY_URL: ${{ secrets.HY2_PROXY_URL }}
       SOCKS_PORT: ${{ secrets.SOCKS_PORT || '51080' }}
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
     
