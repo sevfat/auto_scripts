@@ -108,7 +108,7 @@ jobs:
           XSERVER_PASSWORD: ${{ secrets.XSERVER_GAME_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.XSERVER_GAME_TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.XSERVER_GAME_TELEGRAM_CHAT_ID }}
-          HY2_PROXY_URL: ${{ secrets.HY2_PROXY_URL }}
+          HY2_PROXY_URL: ${{ secrets.XSERVER_HY2_PROXY_URL }}
           SOCKS_PORT: ${{ secrets.SOCKS_PORT || '51080' }}
 
           #以下2个不要动，不会请不要碰
